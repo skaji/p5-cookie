@@ -58,7 +58,7 @@ MyCookie - my cookie class
 
 =head2 CONSTRUCTOR
 
-=head3 C<< $cookie = MyCookie->new(%option) >>
+=head3 C<< $cookie_jar = MyCookie->new(%option) >>
 
 Available option is:
 
@@ -72,11 +72,11 @@ Cookie string, which will be set in request header.
 
 =head2 METHOD
 
-=head3 C<< $cookie->res_cookie >>
+=head3 C<< $cookie = $cookie_jar->res_cookie >>
 
 Get cookies in response header.
 
-=head3 C<< $cookie->req_cookie(String) >>
+=head3 C<< $cookie_jar->req_cookie(String) >>
 
 Set given cookie string to request header.
 
