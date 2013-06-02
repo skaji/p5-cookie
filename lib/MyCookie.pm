@@ -4,31 +4,30 @@ use warnings;
 
 our $VERSION = '0.01';
 
-use Data::Dumper;
-local $Data::Dumper::Sortkeys = 1;
-local $Data::Dumper::Indent   = 1;
-local $Data::Dumper::Terse    = 1;
-
 sub new {
     my ($class, %opt) = @_;
     bless \%opt, $class;
 }
+sub req_cookie {
+    my ($self, $cookie) = @_;
+    defined $cookie ? $self->{req_cookie} = $cookie
+                    : $self->{req_cookie};
+}
+sub res_cookie {
+    my ($self, $cookie) = @_;
+    defined $cookie ? $self->{res_cookie} = $cookie
+                    : $self->{res_cookie};
+}
 sub add_cookie_header {
     my ($self, $req) = @_;
-    $req->header(Cookie => $self->{cookie}) if $self->{cookie};
+    $req->header(Cookie => $self->req_cookie)
+        if defined $self->req_cookie;
 }
 sub extract_cookies {
     my ($self, $res) = @_;
     my @cookie = $res->headers->header('set-cookie');
     return unless @cookie;
-    @cookie = map { [ split /;\s+/ ] } @cookie;
-    if ($self->{dump}) {
-        warn Dumper \@cookie;
-    }
-    if ($self->{save}) {
-        open my $fh, ">>", $self->{save} or die "$self->{save}: $!";
-        print {$fh} Dumper(\@cookie);
-    }
+    $self->res_cookie( [ map { [ split /;\s+/ ] } @cookie ] );
 }
 
 1;
@@ -41,39 +40,45 @@ MyCookie - my cookie class
 =head1 SYNOPSIS
 
   use LWP::UserAgent;
+  use Data::Dumper;
   use MyCookie;
 
   my $ua1 = LWP::UserAgent->new(
-      cookie_jar => MyCookie->new(dump => 1)
+      cookie_jar => MyCookie->new
   );
-  $ua1->get('http://example.com'); # dump cookies to STDERR
+  $ua1->get('http://example.com');
+  print Dumper $ua1->cookie_jar->res_coookie;
 
   my $ua2 = LWP::UserAgent->new(
-      cookie_jar => MyCookie->new(cookie => "NAME=VALUE")
+      cookie_jar => MyCookie->new(req_cookie => "NAME=VALUE")
   );
-  $ua2->get('http://example.jp');  # request with header Cookie: NAME=VALUE
+  $ua2->get('http://example.jp'); # request with header Cookie: NAME=VALUE
 
 =head1 DESCRIPTION
 
-=head2 C<< my $cookie = MyCookie->new(%option) >>
+=head2 CONSTRUCTOR
 
-Available options are:
+=head3 C<< $cookie = MyCookie->new(%option) >>
+
+Available option is:
 
 =over 4
 
-=item C<< dump => Bool >>
-
-Dumping cookie.
-
-=item C<< save => Filename >>
-
-Save cookie to given file.
-
-=item C<< cookie => String >>
+=item C<< req_cookie => String >>
 
 Cookie string, which will be set in request header.
 
 =back
+
+=head2 METHOD
+
+=head3 C<< $cookie->res_cookie >>
+
+Get cookies in response header.
+
+=head3 C<< $cookie->req_cookie(String) >>
+
+Set given cookie string to request header.
 
 =head1 WHY
 
